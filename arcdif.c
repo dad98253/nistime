@@ -105,7 +105,11 @@ float xx,interp();           /* interpolate fraction of a tick */
 	from input line.  300 bit/s transmission does not include
 	MJD and we must get it from yr-mo-day via a call to cvt2jd
 */
+#ifndef LINUX
 	if(hs == 1) sscanf(&buf[j-8],"%5ld",&mjd);   /* also get mjd for SUN */
+#else	// LINUX
+	if(hs == 1) sscanf(&buf[j-8],"%5d",&mjd);   /* also get mjd for SUN */
+#endif	// LINUX
 	else        mjd=cvt2jd(yr,mo,day);
 /*
 	convert nist time to number of seconds since 1/1/70

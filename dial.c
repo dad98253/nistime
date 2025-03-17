@@ -1,3 +1,8 @@
+#ifdef LINUX
+void exit(int);
+void abort() { exit(1); }
+#endif	// LINUX
+
 int dial()
 {
 /*
@@ -243,7 +248,7 @@ sndnum:
 	    while( (cc=getchar()) != '\n')  ; /*skip trailing newline */
 	    goto tryit;
 	   }
-	   exit();
+	   exit(1);
 	}
 /*
 	if we are here then retry > 0 and automatic retries are

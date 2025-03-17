@@ -200,13 +200,19 @@ extern int retry;	   /* number of times to retry if BUSY or NO ANSWER*/
 /*
 	name begins with /dev/tty then add chars just read
 */
+#ifdef LINUX
+	   sprintf(&dv[0],"%s","/dev/ttyACM");
+#else	// LINUX
 	   sprintf(&dv[0],"%s","/dev/tty");
-	   dv[8]=c;
+#endif	// LINUX
+	   int ix = strlen(dv);
+	   dv[ix]=c;
 	   c=getc(iop);
 	   icol++;
 	   if(c == '-')             /* comport is only 1 char long*/
 		{
-		dv[9]='\0';         /*terminate string with null*/
+		ix++;
+		dv[ix]='\0';         /*terminate string with null*/
 		cmport=1;           /*show port specified ok.   */
 		break;
 		}
@@ -216,8 +222,10 @@ extern int retry;	   /* number of times to retry if BUSY or NO ANSWER*/
 		abort();
 		break;
 		}
-	   dv[9]=c;            /* get second character of comport*/
-	   dv[10]='\0';        /* and terminate with null byte */
+	   ix++;
+	   dv[ix]=c;
+	   ix++;/* get second character of comport*/
+	   dv[ix]='\0';        /* and terminate with null byte */
 	   cmport= 1;          /* show port specified ok.      */
 	   break;
 #endif

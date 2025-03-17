@@ -63,7 +63,7 @@ struct tmprev
 	char uatprv;
 #endif
 } tmpp;
-main(argc,argv)
+int main(argc,argv)
 int argc;
 char *argv[];
 {
@@ -130,7 +130,11 @@ char obuf[25];
         printf("\nNISTIME/ACTS Version of %s \n",__DATE__);
 #endif
 #ifdef SUN
+#ifdef LINUX
+	printf("\n Version of 28 October 1992 for LINUX system \n");
+#else	// LINUX
 	printf("\n Version of 28 October 1992 for SUN system \n");
+#endif	// LINUX
 #endif
 
 /*
@@ -327,4 +331,4 @@ char obuf[25];
         hangup();
         }
 }
-
+

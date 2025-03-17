@@ -51,6 +51,7 @@
 */
 /*	#define IBMPC  1*/
 #define SUN   1
+#define LINUX
 #include "sizint.h"
 /*
 	There are two MSDOS versions of the program:
@@ -107,3 +108,6 @@
 #ifdef SUN
 long int tickus = 3906;
 #endif
+#ifdef LINUX
+#define B64 1
+#endif	// LINUX

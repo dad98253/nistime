@@ -44,8 +44,10 @@ char *fname;
 	automatically
 */
 #ifdef  SUN
+#ifndef LINUX
 char *__DATE__;
 	__DATE__="01-20-93";
+#endif	// LINUX
 #endif
 /*
         following are texts of help messages
@@ -265,19 +267,19 @@ char *__DATE__;
               break;
            case 's':
            case 'S':
-              exit();
+              exit(1);
               break;
            case 'R':
            case 'r':
               if( fclose(iop) !=0 )
                  {
                  printf("\n close before rename failed.\n\n");
-                 exit();
+                 exit(2);
                  }
               if( rename("nistime.cfg","config.old") != 0)
                  {
                  printf("\n attempt to rename failed\n\n");
-                 exit();
+                 exit(3);
                  }
               stat=1;
               break;
@@ -286,7 +288,7 @@ char *__DATE__;
               if( fclose(iop) != 0)
                  {
                  printf("\n file close failed.\n\n");
-                 exit();
+                 exit(4);
                  }
               stat=1;
               break;

@@ -29,8 +29,9 @@ extern int lpt;     /* pulse line printer? 1=yes, 0= no */
 extern char number[];   /* which number to dial, first char = mode*/
 int j;
 #ifdef SUN
+#ifndef LINUX
 #include <sgtty.h>
-struct sgttyb blah,*arg;     /* parameters used for ioctl calls */
+	struct sgttyb blah,*arg;     /* parameters used for ioctl calls */
 	arg= &blah;           /* blah is structure */
 	if(hs == 1)
 	   {
@@ -45,9 +46,42 @@ struct sgttyb blah,*arg;     /* parameters used for ioctl calls */
 	arg->sg_erase='\177';
 	arg->sg_kill='\025';
 	arg->sg_flags=RAW;
-	j=ioctl(cmport,TIOCSETP,arg);
+j=ioctl(cmport,TIOCSETP,arg);
 	if(j != 0) printf("\n Watch out! ioctl status=%d",j);
-#endif
+#else	// LINUX
+#include <termios.h>
+    struct termios blah,*arg;	/* parameters used for termios calls */
+	arg= &blah;           /* blah is structure */
+	if(hs == 1)
+	   {
+		cfsetispeed(arg, B1200); // Set input baud rate to 1200
+		cfsetospeed(arg, B1200); // Set output baud rate to 1200
+	   }
+	else
+	   {
+		cfsetispeed(arg, B300); // Set input baud rate to 300
+		cfsetospeed(arg, B300); // Set output baud rate to 300
+	   }
+
+	  // Get the current terminal settings
+	  if (tcgetattr(cmport, arg) == -1) {
+	    perror("tcgetattr");
+	    exit(1);
+	  }
+
+	  cfmakeraw(arg);
+
+	  blah.c_cc[VERASE] = '\177';
+	  blah.c_cc[VKILL] = '\025';
+
+	   // Apply the modified settings
+	  if (tcsetattr(cmport, TCSANOW, arg) == -1) {
+	    perror("tcsetattr");
+	    exit(2);
+	  }
+
+#endif	// LINUX
+#endif // SUN
 #ifdef IBMPC
 unsigned char stat;
 #endif

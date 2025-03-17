@@ -3,6 +3,7 @@ char buf[280];
 {
 #include "nistime.h"
 #include <stdio.h>
+#include <time.h>
 #ifdef IBMPC
 #include <dos.h>
 #endif
