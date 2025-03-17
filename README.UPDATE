@@ -1,0 +1,81 @@
+   The file nistime-32bit.exe is new version 1.5. This version adds 
+support for additional COM ports named COM5 through COM8. The program
+uses the Windows internal driver to control these ports, so that they
+must be recognized as devices by Windows. In all other respects this
+version is the same as version 1.4.
+
+   The file nistime-32bit.exe is new version 1.4. This version fixes
+a problem with daylight saving time. The problem is only seen by a
+user who is in a zone that normally has daylight saving time, but disables
+the automatic correction for it. The intention is to run on standard time
+all year, but the Windows registry does not accurately reflect this in
+all situations. This is not a problem with Win NT or for users who use
+the default setting for daylight saving time in their local time zone.
+
+   In addition, this version will accept dialing strings up to 55 characters 
+in length. (The limit in the previous verson was 40 characters.) However,
+many modems will not accept dialing strings longer than 40 characters, and
+this change may not help because the longer dialing string will be truncated
+by the modem even though the program accepted it.
+
+    Changes to winacts-32bit.exe version number 1.3 of the program.
+In addition to a number of minor changes, this version contains two major 
+improvements:
+
+   1. Handling of the conversion from UTC to local time in non-US time zones. 
+The improvement will be especially noticed by users in the Southern Hemisphere, 
+especially those in New Zealand. The difference between local time and UTC is 
+now read directly from the registry entry.  The transition dates to and from 
+daylight saving time can also be displayed using the daylight saving time menu 
+option. Changes to the registry time zone setting (made using the control
+panel Date/Time function, for example), should now be detected without 
+requiring a re-boot of the system, although it may still be necessary to stop
+and re-start the program itself.
+
+   The direct connection between the program and the registry settings means
+that you cannot easily use the program if the registry setting for your location
+does not correctly indicate the offset between your local time and UTC or if the 
+transition dates to and from daylight saving time stored there are wrong. A program 
+called "tzedit" (usually part of the Windows distribution) can be used to fix these 
+problems, or you can edit the registry directly. Be warned that direct editing 
+of the registry can get you into real trouble and is not for the faint of heart.
+
+   2. If periodic queries are enabled, the program will dynamically estimate 
+the frequency offset of the local clock and will make small adjustments between 
+calibration cycles to correct for this frequency offset. This should improve the 
+accuracy of the local clock when using the same interval between calibrations or 
+should make it possible to realize the same level of accuracy with less frequent
+calibrations. (This capability is not supported by all versions of Windows. It
+will work on Windows NT, but generally does not work under Windows 9x.)
+
+   The frequency of the clock oscillator in most computers is quite sensitive
+to temperature, and any algorithm that attempts to correct for variations in
+this frequency will be limited by the effects of changes in the ambient 
+temperature on the frequency of the oscillator. The capability to make small
+adjustments between calibration cycles therefore may not work as well as you
+would think.
+
+   If you choose periodic queries, there is generally an optimum interval between
+queries which you will have to determine experimentally. Choosing an interval
+that is too small will not do any harm, but will use computer resources and
+network bandwidth without improving the accuracy of your clock because the
+internal frequency estimator would have done just as well on its own. Choosing an
+interval that is too large will degrade the accuracy of your clock because the
+fluctuations in the ambient temperature will defeat the frequency estimator.
+If you are interested in exploring this question, you should enable the option
+to write the time differences to a file, and you should examine this data
+as you vary the interval between calibrations.
+
+  These changes are not incorporated into the 16-bit version of the program,
+which is intended for Win 3.x and 95.
+
+   That version supports direct setting of the time zone, so that improvement 1
+is not needed. In addition, Windows 3.x and 9x do not support slewing the clock 
+frequency so that improvement 2 would not work in those environments anyway.
+
+
+Please direct questions or comments to:
+
+	time@time.nist.gov
+
+5 October 2001

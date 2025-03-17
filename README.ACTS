@@ -1,0 +1,18 @@
+	The NIST Automated Computer Time Service (ACTS) transmits time 
+using standard telephone lines and modems.  The ACTS transmitters can 
+measure and correct for the delay between NIST and your system.  The 
+files in this directory can be used to build a program to access the 
+ACTS system from several different popular computer systems including 
+IBM-compatible PCs, workstations using many variants of the UNIX 
+operating system and VAX computers running the VMS operating system.  
+For more information, see file readme.txt in this directory.
+
+Questions or comments should be directed to:
+
+ACTS Software
+Time and Frequency Division/847
+NIST
+325 Broadway
+Boulder, Colorado 80303
+ 
+e-mail: time@time.nist.gov

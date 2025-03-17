@@ -1,0 +1,54 @@
+                NATIONAL INSTITUTE OF STANDARDS AND TECHNOLOGY
+                 (formerly the National Bureau of Standards)
+
+                             INTRODUCTION TO THE
+                   AUTOMATED COMPUTER TIME SERVICE (ACTS)
+
+     On March 9, 1988, NIST (NBS) initiated operation (in a test phase) of a
+telephone time service designed to provide computers with telephone access to
+NIST time at accuracies approaching one millisecond (0.001 second).  Features
+of the service include automated compensation for telephone-line delay,
+advanced alert for changes to and from daylight savings time and advanced
+notice of insertion of leap seconds.  The ASCII-character time code should
+operate with standard modems and most computer systems.  While the system can
+be used to set computer time-of-day clocks, simple hardware can also be
+developed to set non-computer clock systems.  During the first six months, the
+service will be operated in a test phase to identify problems and obtain
+feedback from users on both the format and opera- tion of the service.  After
+completion of the test phase, there may be some revisions in the service.  The
+area code for the service is 303 and the tele- phone number is 494-4774.  At a
+later date, the service will be changed to a (900) telephone number which
+involves a fixed calling fee.
+
+With appropriate user software, the NIST-ACTS service provides three modes for
+checking and/or setting computer time-of-day clocks.
+  1.  In the simplest form of the (1200 baud) service, the user receives the
+time code and an on-time marker/character which has been advanced a fixed
+period to nominally account for modem and telephone-line delays.  Accuracy in
+this mode should be no worse than 0.1 seconds unless the connection is routed
+through a satellite.
+  2.  At 1200 baud, if the user's system echoes all characters to NIST, the
+round-trip line delay will be measured and the on-time marker advanced to
+compensate for that delay.  The accuracy in this mode should be better than 10
+milliseconds.  Our experience to date indicates that the asymmetry in conven-
+tional, 1200-baud modems limits the accuracy at this level.  Repeatability is
+about one millisecond.
+  3.  At 300 baud the user can obtain the same type of service as described in
+item 2 above, but there is generally less problem with modem asymmetry at this
+rate and our experience indicates that the accuracy is about 1 millisecond.
+
+The accuracy statements here are based upon the assumption that the telephone
+connection is reciprocal, that is, that both directions of communication
+follow the same path with the same delay.  Discussions with telephone carriers
+indicate that this is the general mode of operation and our tests to date
+indicate that the lines are both stable and reciprocal.
+
+In order to assist users of the service, NIST has developed documentation of
+the features of the service, some example software which can be used in con-
+junction with certain popular personal computers and simple circuitry which
+can be used to extract an on-time pulse.  This material is available on a 5¬-
+inch, 360-kbyte DOS diskette with instructions for $35.00 from the NIST Office
+of Standard Reference Materials, B311-Chemistry Bldg, NIST, Gaithersburg, MD,
+20899, (301) 975-6776.  Specify the Automated Computer Time Service, RM8101. 
+Comments on the format or operation of the service should be directed to NIST-
+ACTS, NIST Time and Frequency Division, 325 Broadway, Boulder, CO 80303.

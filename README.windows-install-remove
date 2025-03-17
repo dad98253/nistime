@@ -1,0 +1,54 @@
+1.  Windows installation
+
+   Copy the executable file from this directory to any directory
+on your system. If you are using Windows 3.x or some early versions
+of Win 95 then you should copy winacts.exe. Otherwise copy files
+winacts-32bit.exe and the 4 .dll files in this directory. If you use
+the 32-bit version, then all of the files should be copied to the 
+same directory on your system. The other files in this directory provide 
+additional information and source code but are not required to run the 
+program.
+
+   You can create a short-cut to the program to make it easier to
+run it. To do this, open the Windows explorer and go to the directory
+where you stored the program. Point to the program name with the
+mouse/cursor, hold down the left mouse button and drag the file to
+your desktop. This will create an icon on your desktop with the
+program name.  You can then run the program at any time  by 
+double-clicking on the icon.
+
+   Start the program and look at the various help messages for more 
+information. In particular, see Help | Getting Started. After you have 
+configured the program save this configuration using File | Save Config. 
+You will only have to do this the first time you run the program or after 
+you make a change to the configuration.
+
+  If you have created a short-cut to the program on your desktop, you
+can edit the short-cut to implement the "once" command as described in
+the help messages. To do this, right-click on the short-cut and open
+its properties. Look at the target command line, and add the word
+"once" at the end of this line, leaving at least one space before and
+after this entry. You can enter the word in any combination of upper
+and lower case letters. Do not use the quotation marks and do not
+change anything else.
+
+2. Removing the program
+
+   You can remove the executable file by simply deleting it using the 
+explorer. The 4 .dll files used by the 32-bit version can also be removed 
+in this way if they are not used by some other program. (If you are in 
+doubt about this, it is safest to leave these files alone.) In addition, 
+the program may create two other small files. These are located in the 
+system directory, which is usually c:\windows or c:\winnt.  These files 
+are:
+
+	winacts.cfg		(holds configuration if you have saved it)
+	nistime.dif		(holds time differences if you select this)
+
+These files also can be deleted using the explorer.
+
+The program does not modify the registry or use any other files.
+
+Questions or comments to: time@time.nist.gov
+
+Last Modified:  26 September 2000

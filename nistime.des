@@ -1,0 +1,1580 @@
+               NATIONAL INSTITUTE OF STANDARDS AND TECHNOLOGY
+
+                              EXAMPLE SOFTWARE
+                                FOR USING THE
+                   AUTOMATED COMPUTER TIME SERVICE (ACTS)
+
+Program Name: NISTIME
+
+Usage: NISTIME [ -d ]
+
+     This program is used to set or check the date and time on an IBM personal
+computer (or equivalent) using data obtained by dialing the NIST at (303) 494-
+4774 using a Hayes-compatible modem connected to the computer via one of the
+COM ports. It can also be used to provide an output pulse on the line-printer
+port to synchronize other devices.  This pulse is provided once per second
+when the 1200 bits/s service is used and once every two seconds at a
+transmission speed of 300 bits/s.
+     Other versions of this program have been developed for performing the
+same functions on other hardware.  These variants are described in more detail
+in Appendix A.
+     The different operating modes are selected by means of a configuration
+file.  A separate program called MAKCFG (described in more detail below) can
+be used to make this file based on your answers to a series of questions. You
+may also generate or modify this file using any text editor.  Once the
+configuration file is prepared, you start the program by typing the command
+NISTIME <return> in response to the system prompt.
+    The switch -d on the command line is optional.  If present, it specifies
+debug mode, and causes various intermediate parameters to be written to the
+screen.  The default is no debug mode.  The brackets enclosing the -d are
+meant to signify that the switch is optional.  They are never entered on the
+command line.
+
+      See the section below on operating instructions for more information.
+
+                           The Configuration File
+
+    The name of the configuration file is nistime.cfg.  It must be located in
+the same directory from which the program will be run.  The configuration file
+may be prepared with a text editor such as EDLIN or EDIT.  Alternatively, it
+may be generated using program MAKCFG, described below.  
+
+      The file contains 5 or 6 lines in the following format:
+
+     Line 1: Dialing mode and telephone number.  The first character on line 1
+must be P, T, M or A.  P means that the modem will dial the telephone number
+using pulse mode (which emulates a rotary dial mechanism), T is for tone mode
+(which emulates push-button telephones) and M is for manual dialing (which
+means that the telephone connection will be completed manually outside of the
+program).  In pulse mode or tone mode, the remaining characters on the line
+are the digits 0 - 9, a space or a comma.  (Some modems will also accept the *
+and # symbols as part of the telephone number in tone mode and will dial them
+as well).  The telephone number is not modified by the program and the entire
+string is passed to the modem.  This line must contain the complete telephone
+number including long-distance access and area code (if necessary) and any
+other accounting digits as needed.  A comma signifies a pause for 2 seconds to
+wait for another dial tone, and spaces may be inserted to improve legibility. 
+For example:  T 9, 987 6 5 4 3 means dial 9, wait 2 seconds and then dial the
+remaining digits.  All digits are dialed in tone mode.  The telephone number
+must be less than 30 characters long including embedded blanks. (The limit is
+40 characters on some newer modems with blanks not counting against the
+limit.)  If the first character is M, then manual dialing is specified and the
+remainder of the line is ignored.  The program will prompt you to dial the
+telephone manually and will wait until you indicate that the connection is
+completed.
+
+      If the first character of line 1 is A (or a), the remainder of the line
+may contain any modem commands in addition to the command to actually dial the
+ACTS telephone number (which must be present as the last command in a multi-
+command sequence).  This capability may be used to send special configuration
+information to the modem before the telephone number is dialed.  Any command
+that is recognized by the modem may be used here, although some caution is
+necessary as discussed below.  For example, if you wish to turn off the modem
+loudspeaker before dialing, then you should precede the command to dial the
+telephone with the command to turn off the loudspeaker.  Line 1 should be as
+follows:
+
+ATM0DT13034944774
+
+Note that only one "AT" is necessary when this syntax is used, and that the
+full Hayes command sequence must be present.  The telephone number begins with
+the letters DT or DP (tone or pulse dialing, respectively) and can include
+additional digits for long-distance access codes as needed.   In all cases,
+the entire string is simply sent to the modem without interpretation.  Most
+Hayes-compatible modems will accept commands up to 40 characters long using
+this syntax.  (Some modems  allow embedded spaces to make the command more
+legible, and these spaces usually do not count against the 40-character
+maximum.)  If you need more than 40 characters, then you will have to break up
+the command into separate, legal Hayes commands, each of which is a complete
+command in itself whose length is less than 40 characters.  Each sequence must
+be separated by the "|" character, which only acts as a separator and is not
+sent to the modem.  The program will add a carriage return to each command and
+will send each one separately, pausing about 2 seconds between each segment. 
+The entire string of commands must be less than 255 characters long.  The
+command sequence starts with the first character on the line and continues
+until the newline character at the end of this "line" is found.  For example,
+the same command above could be written as:
+
+ATM0|ATDT13034944774
+
+Note that the "|" character separates two distinct, complete Hayes commands so
+that two "AT" strings are necessary.  This sequence will be sent as:
+
+ATM0 <return>
+
+pause 2 seconds, then send
+
+ATDT13034944774 <return>
+
+
+The first command turns off the loudspeaker and the second command call the
+ACTS service.  This capability may also be useful in configuring higher-speed
+or error-correcting modems to work at 1200 bits/second without compression or
+error correction.  If, for example, the command to do this is AT&Q6, then the
+first line of the file should contain:
+
+AT&Q6DT13034944774
+
+Most high speed modems "fall-back" automatically to 1200 bits/second, and
+these additional commands should only be necessary if the modem must be
+explicitly told to turn off the higher-speed protocols.
+
+      One of the following command strings may be helpful if you have a multi-
+speed modem that does not connect reliably to the ACTS servers:
+
+AT &M0 &N2 DT 1 303 494 4774
+
+or
+
+AT &Q6 S37=5 N0 DT 1 303 494 4774
+
+or
+
+AT &Q0 S23=53 DT 1 303 494 4774
+
+(The spaces between parameters are optional)
+
+
+      Any command entered in this way is transmitted to the modem without
+interpretation, so that errors in the command string may result in erratic
+operation.  In addition, you should be careful not to turn off several
+parameters that the ACTS software requires for proper operation.  These
+include "display word result code" (usually Q0 V1) and "enable dial tone and
+busy signal detection (X4).  You should also not use the "reset modem" command
+(ATZ).  The software sends this command before dialing, and sending it again
+may undo the configuration that has been set by the program.
+
+      This capability is only partially supported by program MAKCFG, and you
+should add complex commands to the configuration file using a text editor
+(such as EDLIN or EDIT) after MAKCFG finishes.
+
+      Line 2: The first character specifies which communication port will be
+used.  There are two versions of the program which differ in which ports they
+can use (see below for more details).  If the version that uses direct calls
+to the BIOS is used (called NISTIMEB.EXE on the distribution disk), the first
+character must be 1 or 2 to specify communication via COM1 port or COM2 port,
+respectively, since only these ports are supported by the internal BIOS
+routines.  If the version that controls the ports directly is used (called
+NISTIMED.EXE on the distribution disk), the first character may also be 3 or 4
+to specify ports COM3 or COM4, or it may be h (or H) to signify that the COM
+port will be specified by its hardware address on line 6 (see below).  This
+character must be set to match the port to be used.  
+
+     The second character on the line may be B (or b) or E (or e).  This
+character specifies whether the program is to expect responses to various
+dialing commands from the modem.  E specifies echo mode:  the program expects
+that characters sent to the modem in command mode will be echoed and that the
+modem will respond OK to a command; B specifies blind operation.  Some modems
+can be configured either way either by a switch or the Q command.  (A modem
+configured by the Q command will revert to the switch default upon reset.)  If
+the second character on the line is neither B nor E, then E is set by default. 
+Note that when the program is configured for echo mode (by specifying E
+explicitly or by default) then it will insist on responses and will abort if
+they are not received.  
+
+    The third character on the line specifies the communication speed (and,
+implicitly, the communication protocol).  If the third character is h (or H),
+then 1200-bits/s high-speed communication is selected using the 212A-type
+protocol.  If l (or L) is used, then 300-bits/s low-speed service is selected
+using 103-type protocol.  Many modems are capable of operating at either
+protocol (such dual-speed modems are often identified as "300-1200" type) and
+will switch to the correct speed and protocol automatically when then are
+activated.  Triple-speed modems of the "300-1200-2400" type may also be used
+at either 300 or 1200 bits/s.  Higher speed (and combined data/FAX) modems can
+also be used in 1200 bit/s service, although compression and error-detection
+may have to be switched off explicitly using a command string as described
+above.
+
+     Different messages are transmitted depending on the speed selected.  The
+message transmitted at 1200-bits/s contains the full date and time, including
+the Daylight-Savings Time flag and other information.  This service is
+intended for users who want to set or check the time of the computer clock
+with an uncertainty on the order of 10 - 20 milliseconds (0.01 s - 0.02 s)
+limited by the resolution and accuracy of the internal computer clock.  See
+the discussion below for more information.
+
+      The message transmitted at 300-bits/s is somewhat shorter because of the
+slower transmission speed, and does not contain the Modified Julian Day (MJD)
+or the UT1 correction (DUT1).  In addition, it is only sent every other
+second.  Unlike previous versions of the software, this version supports both
+setting and checking the time at either transmission speed.  This service is
+intended for users who design special-purpose systems that can make use of the
+potential increase in accuracy that can be realized using the slower
+transmissions.
+
+     The fourth character on this line selects a timing-pulse capability. If
+this character is y (or Y), then a negative-going pulse (from +5 v to 0 v) is
+sent to the strobe line of the line-printer port (LPT1) every second upon
+receipt of the on-time marker (the * or # symbol at the end of each
+transmitted line) from NIST.  The pulse is sent to pin 1 of the DB25 female
+connector used for the standard line-printer interface.  Pin 25 of the same
+connector is at ground potential.  The leading-edge of the pulse is delayed
+from receipt of the on-time marker by a time on the order of micro-seconds,
+depending on the speed of the computer.  The pulse is approximately 20 micro-
+seconds wide.  This pulse is normally used by the printer interface software
+to transfer a character from the computer to the line printer (-strobe), so
+that the printer should be disconnected if this capability is enabled.
+
+      There are three types of commonly used line-printer interfaces.  One of
+them is part of a combined monochrome display and printer adapter.  The second
+is just a printer adapter and the third is a combined serial/parallel adapter
+that is normally found only on 286 (and faster) type machines.  The command
+register address for the first type is 3be (hex), while the second types both
+use 37a (hex).  If the strobe capability is enabled, the program obtains the
+address of the adapter from address 410 (hex) in low memory. (Note that
+address 410 hex is offset 0 in paragraph 41 hex).  If location 410 (hex) is
+zero or if the adapter does not respond to a test pulse, the program will
+print a diagnostic message to that effect, the pulsing capability will be
+disabled and the program continues.
+
+     The fifth character on the line determines whether or not the received
+data will be used to set the computer clocks or merely to check them.  If this
+character is s (or S), then the clocks are set and then verified by comparing
+the time read from the internal clocks with the next line received from the
+NIST (both the received time and the internal clocks will have advanced by one
+second between the time they were set and when they were checked).  This mode
+does not preserve the time of the clocks before they were set and does not
+provide any information on the performance of the clocks.  If this character
+is d (or D) then the clocks are only compared.  The NIST time, the computer
+time and their difference are typed on the screen.  This mode preserves the
+time of the clock (since it is not set), and can also be used to give an
+estimate of the rate error (how much the computer clock is gaining or losing
+with respect to NIST).  The rate error (expressed in seconds per day, for
+example) is simply the time difference in seconds reported by the program
+divided by the number of days since the clock was last set.  This mode of
+operation is intended for users who want to characterize the performance of
+their clocks by observing their accuracy over extended periods of time.
+    The effect of this switch also depends on the AT switch (described below). 
+An IBM AT-type machine (286 or above) has two clocks -- one whose time is
+stored in the volatile memory and which is updated by the ROM BIOS only when
+the computer power is on and one which is powered by a battery and which runs
+continuously.  Other models (such as the older XT-class machines) do not have
+a battery clock.  This switch enables or disables the setting of BOTH clocks
+for an AT-class machine and only the memory-based clock for other models. 
+That is, both clocks are either set and verified or just compared.
+
+      The sixth character on the line is used to enable storing time-
+difference measurements in a file for subsequent more detailed analysis.  If
+this character is a, the time difference between the computer clocks and the
+NIST is stored in a file named NISTIME.DIF.  The program writes the current
+time difference to the end of the file (if it currently exists) or creates a
+new file if it does not.  The time difference is written in the form: year,
+month, day, hour, minute, second, difference of volatile memory clock and
+difference of battery clock (if it exists).  The year, month, etc. are taken
+from the NIST transmission and the difference is a signed number which is
+positive if the computer clock is fast and negative if it is slow.  The
+difference is followed by a single letter giving the units: d, h, m, s for
+days, hours, minutes and seconds respectively.  This computation is separate
+from the setting or checking modes described above.  It is performed when the
+fifth line is received from NIST, so that the difference will be written to
+the file BEFORE the clocks are set (if that option is specified).  Although
+the action of this switch is independent of whether the clocks are set, the
+interpretation of the data is not.  If the fifth character specifies that the
+clocks shall always be set, then the difference written to the file by this
+operation is the time error that has accumulated since the last NIST access,
+since the clocks were corrected at that time.  If the fifth character
+specifies that the clocks are not to be set, however, then the time error is
+the cumulative error since the clocks were last set, and the error since the
+last NIST access is the difference between the current and previous values for
+the differences.
+
+      If this character is A, then in addition to writing the current
+differences to file NISTIME.DIF as described above, the program will compare
+the current differences against the values that were estimated the previous
+time (i.e. the values found at the end of the file when the program was first
+activated). The previous differences are subtracted from the current
+estimates, and the results are divided by the time that has elapsed since the
+last value was stored in the file.  The result is an estimate of the rate of
+the computer clock with respect to NIST.  These rate estimates are printed on
+the terminal in units of seconds per day, where a positive value means that
+the computer clock is running faster than the NIST rate.  The uncertainty of
+this rate estimate is discussed below.
+
+      If this character is n (or N), then the time difference is not stored in
+the archive file and the rate estimate is not computed.  Note that this is the
+only parameter whose effect is different in upper or lower case. 
+
+      The seventh character on this line determines how the program will
+respond if the telephone call to the NIST/ACTS service does not complete. 
+This can happen if the line is BUSY or if the modem times-out and returns a
+status of either NO ANSWER or NO CARRIER.  If this character is R, the program
+will automatically re-dial NIST/ACTS up to 6 additional times; it will try 3
+additional times if it is r.  It will pause a few seconds between each attempt
+in either case.  If this character is m (or M), it will print a message on the
+screen after each failure asking if you want to try again.  It will continue
+to re-dial the connection until the call is completed or you respond n(o) to
+the query.  If this character is any other character or is not present then
+the program will exit immediately if the call is not successful.  Note that if
+the character is not present, this version of the program will behave in the
+same way as the previous versions so that older configuration files (which do
+not specify this capability) can still be used.
+
+     The remainder of this line is ignored and may contain any characters.
+
+     Line 3:  This line specifies the time zone of the user.  This parameter
+is used to convert the time transmitted by the NIST from universal time to
+local time.  The parameter represents the value of local time minus Universal
+time in hours.  Locations West of Greenwich are negative, while those East are
+positive.  If specified by value, the value should not exceed 12 hours, but
+this is not checked.  The zone may be specified by name or numerically as
+follows:
+
+First character on line      Action            Offset in hours
+
+P or p                       U. S. Pacific Time    -8
+
+M or m                       U. S. Mountain Time   -7
+
+C or c                       U. S. Central Time    -6
+
+E or e                       U. S. Eastern Time    -5
+
+Z or z                       Greenwich Time         0
+
++ or - or digits             Number read            defined by number
+
+In all cases, the remainder of the line is ignored.  Thus the following lines
+are equivalent:
+
+Mountain Standard Time
+m
+-7     The Rocky Mountains are here
+
+The program does not support conversion to local time in half-hour zones (i.e.
+zones where the time difference between local time and Universal time is not
+an integral number of hours).
+
+      Program MAKCFG (see below) also allows the user to specify any time zone
+by its letter.  If that method is used, MAKCFG converts the letter to its
+equivalent numerical offset.  See MAKCFG for more details.
+
+     Line 4.  If the first character is 1, then the user observes Daylight
+Savings Time, and the local time will be adjusted accordingly if necessary,
+based on the Daylight Savings Time flag transmitted by NIST.  If the first
+character is 0, the Daylight Savings Time flag is ignored and no such
+adjustment will be made.  No other characters are permitted on this line.
+If you use a 1 here, then the time will be advanced by one hour if the NIST
+transmission indicates that Daylight Savings Time is currently in effect.
+You will need to use 0 if you live in an area that does not observe Daylight
+Savings Time at all (such as Arizona), or if you change to Daylight Time on a
+different day from the national standard.  (The transmissions from NIST assume
+that the transitions are at 2 am local time on the first Sunday in April and
+the last Sunday in October.)
+
+     Line 5.  This is called the AT-flag.  If the first character is 1, the
+user has an AT-type machine with a CMOS battery clock, and the program will
+set or check it (in addition to the clock that is stored in memory).  If the
+first character is 0, the CMOS clock is neither set nor checked.  Zero is
+appropriate for users who do not have a CMOS battery clock or who have this
+type of equipment but do not want it to be used. Note that the time stored in
+the volatile memory clock is lost when the power is removed, so that you
+should probably set and check the battery clock if you have it.  The remainder
+of this line is ignored and may contain any characters.  This parameter should
+normally be set to 1 for most newer machines.
+
+       Line 6.  This line is optional.  It is only necessary if you are using
+the direct-access version of the program (NISTIMED on the distribution) and if
+the first character on line 2 is h (or H), indicating that the COM port is to
+specified in terms of its hardware address.  In that case, the hardware
+address must appear on this line beginning in column 1.  The address must be
+specified in hex and is usually three digits long.  The usual values for COM1
+and COM2 are 3f8 and 2f8, respectively.  This specification is not necessary
+if you use standard COM1 or COM2 ports, since the addresses of those ports can
+always be obtained by the program.  It is also not necessary if you use COM3
+or COM4, and if the addresses of these ports are stored in the BIOS data
+tables (at addresses 0:404 and 0:406, respectively).  Although these locations
+are reserved for the addresses of COM3 and COM4, many versions of the BIOS do
+not use them.  If this is the case in your system, then the program will halt
+with the message, "Port not in configuration" if you try to use specify COM3
+or COM4  using a 3 or a 4 as the first character on line 2.  In that case you
+must place an 'h' in col 1 of line 2 and you can then specify the hardware
+address here.  The hardware address can usually be obtained from the
+installation manual provided by hardware manufacturer.  Typical values for
+COM3 and COM4 are 3e8 and 2e8, respectively, but other values may be used on
+your system.
+
+                            Hardware Requirements
+
+     The program will run on an IBM computer or equivalent.  The computer must
+contain at least one serial port configured as a standard COM port with an
+external modem compatible with the Bell System 212A standard (1200 bits/s) or
+the 103 standard (300 bits/s) and capable of responding to the Hayes dialing
+commands.  Internal modems and multiple speed modems that emulate these
+configuration are acceptable.
+
+     If the output pulse capability is selected, the computer must have a
+parallel output port for a line-printer that is configured as LPT1.  The
+address of the port can be either 37a (hex) or 3be (hex).  The former is used
+by the printer adapter and the combined serial/parallel adapter, while the
+latter is used for the printer portion of the combined monochrome
+display/printer adapter.  If this capability is enabled, the printer should be
+turned off or disconnected from the computer before the program is started. 
+
+                            Software Requirements
+
+      Program NISTIMEB uses calls to the standard IBM DOS and BIOS routines
+except for the output pulse option that directly accesses the parallel output
+port.  This version is isolated from the vagaries of the hardware by the BIOS,
+and it is likely to work with non-standard hardware that emulates the IBM
+standard using a custom BIOS.  It can only use ports COM1 or COM2, however,
+since those are the only ports supported by the standard BIOS routines.  It
+also requires that the modem assert the Clear-to-Send line (CTS) before the
+connection is made.  Again, that is a requirement of the standard BIOS. 
+Program NISTIMED uses calls to the IBM DOS and BIOS routines to set and read
+the clocks, but input and output are performed by direct commands to the
+hardware ports.  This version of the program can access all four COM ports and
+does not require that the modem assert CTS, but its operation depends on the
+detailed hardware configuration and is therefore less likely to work with
+third-party equipment that does not emulate the IBM personal computer at the
+hardware level.  Both versions are written entirely in Borland Turbo C under
+DOS 3.2 (with no assembly language code), but are likely to work under earlier
+versions of DOS back to 2.0.  Either version can be generated by altering a
+constant in the configuration file NISTIME.H (supplied with the source code)
+and then recompiling the affected modules (see below).
+
+                             Transmission Format
+
+      When the telephone connection to the NIST time service is completed, the
+NIST hardware sends timing information at either 300 bits/s or 1200 bits/s
+using standard ASCII characters.  A line of information is sent every second
+at 1200 bits/s and every other second at 300 bits/s, and the transmission
+continues for a predetermined number of seconds after which the connection is
+automatically broken.  The two transmission speeds use slightly different
+formats.
+
+      In the high-speed (1200 bits/s) service, each line begins with a five-
+digit integer giving the Modified Julian Day Number (which advances by 1 every
+day and is about 47000 in 1988), and the year, month, day, hour, minute and
+second in Universal (Greenwich) Time.  This time will be correct upon receipt
+of the terminating character (* or #) to be described below.  The Modified
+Julian Day number is not sent at 300 bits/s; the remainder of the date and
+time are the same.
+
+     The next parameter is the Daylight Savings Time flag.  Values from 50 to
+1 indicate the Daylight Savings Time is currently in effect; other values (99
+to 51 and 0) indicate that Standard Time is currently in effect.  Values other
+than 50 or 0 indicate both the current time and the number of days left before
+a transition to the other time is needed.
+
+     Next is the leap-second flag.  Zero is the normal case.  A value of 1
+indicates that an extra second will be added following 23:59:59 (Universal
+Time) on the last day of the current month.  This second will be called
+23:59:60, and the second after it will be 00:00:00 of the next day.  A value
+of 2 indicates that a second is to be dropped on the last day of the current
+month.  The second following 23:59:58 will be 00:00:00 of the next day.  Leap
+seconds are usually required about every 18 months and are most commonly added
+at the end of June or December.  It is unlikely that the dropping of a second
+will be necessary in the near future. Note that the leap second transition is
+linked to Universal Time, unlike the Daylight Savings transition which is
+linked to local time.
+
+     The next number is the estimated offset between UT1 (a time scale derived
+from the rotation of the earth) and UTC (a time scale derived from frequency
+standards).  The units are in seconds in steps of 0.1 second. This parameter
+is not sent at 300 bits/s.
+
+     The next parameter is the estimated telephone-line time delay in
+milliseconds as determined by the NIST hardware.  It is estimated as one-half
+of the average time it takes the terminating character to be sent to the user
+and returned. (Any user who intends to make use of this delay must echo the
+terminating character back using either hardware or software methods.  If the
+terminator is not echoed back to NIST, a nominal delay is assumed.)   The
+remaining characters on the line are UTC(NIST) and the terminating character. 
+
+     The terminating character will be a * if the delay has not yet been
+measured or is not stable, and will change to a # if 4 consecutive
+measurements yield consistent values.  The NIST hardware uses the time delay
+estimated in this way to transmit the subsequent terminating character so that
+it will arrive on time at the user.  If the user does not echo the terminator
+back to NIST, then a nominal delay is assumed and the terminator is sent using
+this nominal value.  This nominal value is unlikely to be in error by more
+than 0.1 second unless the circuit is transmitted via satellite.
+ 
+                           Operating Instructions
+
+     The program may be run from any directory on any disk.  If necessary,
+copy the files nistimed.exe (or nistimeb.exe) and nistime.cfg to the
+appropriate directory.  If you will use program makcfg, then copy makcfg.exe
+to the same directory.  Make that directory the default using the cd command. 
+Edit the configuration file nistime.cfg if necessary (or run program MAKCFG). 
+Any text editor, such as EDLIN or EDIT may be used for this purpose.  (Word
+processing programs can also be used to edit the file provided that the output
+file is in standard DOS format (sometimes called ASCII format).  Note that
+this is not the default output format for most word processors.)
+
+     When the files are ready, connect the modem to the telephone line and to
+the computer and execute the program.  If the program is to be run from
+directory blah on disk c, for example:
+
+copy nistime*.*    c:\blah                copy the files.
+copy makcfg.exe  c:\blah
+
+c:                                      change to c disk if necessary
+
+cd \blah                                set directory if necessary
+
+type nistime.cfg                 type the configuration file on the
+                                      screen to see if it needs to be       
+                                      modified.  If it does, you may do     
+                                      so using an editor such as edlin,     
+                                      as shown below.  Or, you may run      
+                                      program MAKCFG, described below       
+                                      to produce a new nistime.cfg file.    
+
+edlin nistime.cfg
+   .
+   .
+   .                                     edit configuration file if necessary
+
+ex                                       exit from the editor
+
+rename nistimed.exe nistime.exe          rename either version as nistime
+
+or    
+
+rename nistimeb.exe nistime.exe
+
+nistime                                  run program
+
+                             Operating Sequence
+
+     This is what happens when the program is run:
+
+1. The command line is examined to see if it contains -d.  If it does, then
+set the debug mode to 1 (turn it on); otherwise leave debug at 0.  This
+parameter is used for testing the program and should not normally be
+specified.
+
+2.  Read the configuration file nistime.cfg and set the various parameters. 
+If an error is detected in reading the file, print a message and stop.  If the
+configuration file does not exist in the default directory, then use a default
+configuration which is identical to the sample configuration file.
+
+3.  Initialize the com port to 300 or 1200 bits/s, no parity, 1 stop bit.  If
+output pulses are requested, determine the address of the parallel printer
+port.  If the address cannot be determined then print a diagnostic message and
+disable the output pulse selection.
+
+Previous versions of the program also estimated the relative speed of the
+computer in this step.  The relative speed parameter was used to compensate
+time-out loops in various parts of the program, but this version replaces
+these loops with direct calls to the internal clock.  This method is more
+reliable on very fast MS-DOS systems, especially those with extended or
+expanded memory.
+
+4.  Dial the number if necessary.  If remote modem answers print connect
+message and proceed.  If no answer or busy and re-dialing has not been
+selected then print message and stop.  If automatic re-dialing was enabled in
+the configuration file then wait a few seconds and try again, repeating this
+loop until either the connection to ACTS is made or the number of re-tries is
+reached.  If manual re-dialing was specified, then print a message on the
+screen and wait for a response.  Try again if the response is y(es) and exit
+if it is n(o).
+
+      If manual dialing was specified, print a message for manual dialing and
+wait for a response indicating that the connection has been completed.
+
+5.  Read the first 6 lines and echo the terminating character back to NIST for
+measuring the transmission line delay.  Send an output pulse when each
+terminating character is received if that capability was specified in the
+configuration file.  Print these lines on the screen.  The terminating
+character will be * initially and will change to # if the NIST hardware
+measures a stable transmission delay.  
+
+6. If archive mode is specified, the time difference between the computer
+clocks and the NIST transmission is computed when the fifth line is received
+and stored in file NISTIME.DIF.  If a rate estimate was also requested,
+subtract the current values from the values that were at the end of file
+NISTIME.DIF and divide the results by the time that has elapsed since the last
+communication.  Convert the result to seconds per day.  (Note that the current
+version of the software will perform this computation at any transmission
+speed.)
+
+7.  If setting was enabled, use the time of the 7th and 8th lines to set the
+computer clock.  The time is set to the received time of the 8th line provided
+that it is exactly 1 second later if the transmission speed is 1200 bits/s or
+2 seconds later at 300 bits/s than the time received in the 7th line.  If the
+times of the two lines do not differ by the expected amount, then try again
+with the next two lines.  This method minimizes the probability that the
+computer clocks will be set incorrectly as a result of a transmission error. 
+If the AT flag is on, then both the memory clock and the CMOS battery clock
+are set.  Adjust the time to local time and for daylight savings time as
+specified in the configuration file.  Echo the terminator of this line back to
+NIST and send an output pulse if pulse selection is enabled.
+
+8.  Read the time of the next line received from NIST and compare the time
+with the current values of the computer clocks.  (All of the clocks should
+have advanced by 1 second at 1200 bits/s and 2 seconds at 300 bits/s.)  Print
+both the times and the time difference values on the screen.  If the AT flag
+in the configuration file is set, then compare both clocks with the time
+received from NIST and print both sets of times and time differences on the
+screen.  The memory-based clock "ticks" 18.2 times per second, while the CMOS
+battery clock in an AT-type computer "ticks" once per second.  It is not
+possible to read or set either clock to better than one of its ticks, so that
+differences of one tick or less are not significant. (This is discussed in
+more detail below.)
+
+9.  If output pulses are not enabled, then hang up the modem and exit.  If
+automatic dialing was selected, a % character is sent to NIST and the Hayes
+hang-up sequence (+ + +) is sent to the local modem.  If manual dialing was
+selected, then the local modem is presumed to not understand the Hayes
+commands and the Hayes hang-up sequence is not sent.  If output pulses are
+enabled then do not hang-up the telephone, but continue receiving lines as in
+paragraph 5 above until the NIST disconnects the call.
+
+                               Timing Accuracy
+
+     The volatile memory clock in personal computers of this type (IBM-pc or
+equivalent) ticks approximately 18.2 times/second (about every 56
+milliseconds), and the time is kept as the number of ticks past midnight.  It
+is not possible to alter the tick fraction using calls to either DOS or the
+ROM BIOS.  This has two significant consequences:
+
+1. Since there are not an integral number of ticks/second, not all times can
+exist.  For example, 00:00:01.00 is not an integral number of ticks after
+midnight and therefore can not be set and will never be read.  The nearest
+times are 00:00:00.98 and 00:00:01.04.  The average offset between any given
+time and the nearest time that can be set is 0.5 ticks or about 28
+milliseconds.
+      The program interpolates between ticks by measuring the number of times
+a simple instruction can be executed until the next tick arrives and scales
+this value by the relative CPU speed of the processor which was determined
+when the program started (see above).  This interpolation is likely to be
+accurate to about 5% of 1 tick (about 2 milliseconds).
+
+2. Time intervals are also uncertain by up to 1 tick since the tick fraction
+when the time is read cannot be known to the program.  Again, the average
+offset is 0.5 ticks (28 milliseconds).
+
+    The CMOS clock in AT computers cannot be set to better than a second since
+it does not store fractions of a second.  The seconds fraction must therefore
+be truncated or rounded when the CMOS clock is addressed.  This will further
+limit the accuracy of the time following a re-boot of the system (since the
+CMOS clock is copied into the system RAM clock at that time).  
+
+     In addition to these errors in setting and reading the clock in this type
+of computer, there is a possible error in the computation of the telephone
+line delay.  This delay is measured at the NIST as one-half of the time it
+takes the terminating character (* or #) to be sent from NIST to the distant
+computer and return to the NIST hardware.  This method depends on the
+assumption that the transit time is reciprocal, i.e. that the time from NIST
+to the computer is the same as from the computer to NIST.  This may not be
+true if the two paths are different;  many 1200 bits/s modems also have delays
+that are not reciprocal.  Modem delays vary from brand to brand and are on the
+order of tens of milliseconds.   
+
+     The accuracy of the computer clocks after they have been set is
+determined by the accuracy of the rate of the internal crystal-controlled
+oscillators.  These rates are usually sensitive to temperature and other
+factors and are unlikely to be stable to better than about 1 part-per-million
+(about 0.1 seconds/day), so that errors in the time of this order are likely
+even if the time is set exactly initially.
+
+    There may also be a problem with the date if the machine is run
+continuously, since the date in some computers is not advanced when the time
+passes through midnight.  (This comment applies to the clock stored in memory
+only.  The CMOS clock in AT-type machines advances the date properly, but this
+clock is only used to set the time initially when the computer is started.) 
+This is a "feature" of the BIOS routines that manage the memory-based clock.
+
+     The accuracy of the output pulse is limited primarily by the stability of
+the telephone line delay, since the delays within the computer are likely to
+be very small by comparison.  Many modems contain equalizing circuits that
+attempt to measure the characteristics of the telephone line to which they are
+connected.  The operation of these circuits may adversely affect the stability
+of the measured time delay.  Although the measured delay may be quite stable
+from second to second (with fluctuations of less than 50 micro-seconds), it
+often changes significantly every few seconds (as much as 500 micro-seconds)
+as the equalizing circuits operate.  The equalizing circuits are usually more
+important at the higher speeds so that this effect is likely to be smaller at
+300 bits/s.
+
+      The method used by the program to estimate the rate of the computer
+clocks may produce estimates that have large uncertainties if the program is
+run very often.  The rate is computed by subtracting the current time
+difference from the previously estimated value and the result will be affected
+by the jitter in both estimates.  The uncertainty of the result will be about
+40% higher than the uncertainty of either of its constituent differences. 
+This second difference (the difference of the differences) will have an
+average uncertainty of about 1.4 X 0.5 ticks or about 40 milliseconds (= 0.040
+seconds).  If the two program runs are 5 minutes (= 0.00347 day) apart, an
+uncertainty in the second difference of 40 milliseconds translates into a rate
+uncertainty of 0.040/0.00347 = 11.5 seconds/day.  This uncertainty is likely
+to be much larger than the true rate error of the clock so that a rate
+estimate done this way is unlikely to give an accurate estimate of the
+performance of the computer clock.  If, on the other hand, the two program
+runs are 5 hours apart (= 0.21 day), the same uncertainty in the second
+difference translates into a rate uncertainty of 0.040/0.21 = 0.2 seconds/day. 
+Thus, estimating the rate more often than 1 or 2 times per day is not
+recommended.
+      This problem has been reduced somewhat by interpolation between ticks. 
+This interpolation is performed by measuring the number of times a simple
+instruction can be executed starting a given tick as received from NIST and
+ending with the next tick of the internal clock, and normalizing that number
+by the relative speed of the computer determined automatically when the
+program starts.  The interpolation is likely to reduce the uncertainty of each
+time-difference measurement by about a factor of 10 (i.e., from 0.5 ticks to
+about 0.05 ticks), and the rate uncertainties using this newer version will
+also be about a factor of 10 smaller than the values quoted above.
+
+      A second difficulty with the rate-estimating process will occur if the
+program is configured to set the computer clocks.  The time difference is
+written to the archive file BEFORE the clocks are set (see above).  When the
+clocks are set, however, the time difference is set to zero, but a subsequent
+rate estimate does not take this into account and uses the last value found in
+the file even though it has been invalidated by the process of setting the
+clocks.  Thus both the archiving process and the rate estimating process yield
+unambiguous values only if the clocks are not set.
+
+                               Fixing Problems
+
+     If the program does not work, the following suggestions may be helpful.  
+
+1.  First check the hardware configuration to be sure that it is connected, is
+in working order and is an IBM personal computer or functional equivalent. 
+Likewise be sure that the modem is connected to the computer and to the
+telephone line and that it responds to the Hayes protocol.
+
+2.  Many modems have a small loudspeaker that is connected to the telephone
+line until the connection is made.  Some modems also have lights to show the
+status of the call.  The modem should start dialing within a few seconds after
+the program is initiated.  If a loudspeaker is present, the dial tone should
+be heard followed by the dialing sequence.  If lights are present, OH (off-
+hook) should light and SD and RD (send-data and receive data) should flash. 
+If none of these things happens, be sure that the hardware is properly
+configured and that the configuration file specifies the correct port.  If you
+are using NISTIMEB, which uses the BIOS for input/output, it is possible that
+the dialing commands are not being sent to the modem.  The IBM BIOS checks for
+various status indicators from the modem and will not initiate a transmission
+to the modem unless these status indicators are correct.  In particular, DSR
+(Data Set Ready) must be true.  In some modems this line follows DCD (Data
+Carrier Detect) and therefore will not be true until the telephone connection
+has been completed (this is logical for a modem used to answer incoming calls,
+but not for modems that can originate calls since they should be "ready" to
+accept a dialing command before the call is established).  In this case, the
+modem will never be sent dialing instructions, since it will appear not ready
+at the start of the program.  This may usually be changed by a switch in the
+modem.  When set appropriately, this switch forces DSR and DCD to be true
+continuously.  This adjustment is described in the instruction manual for the
+modem.  It is often implemented as switch number 6.  Note that changing the
+setting of this switch may change the operation of other programs, especially
+some terminal emulators that access the COM ports directly and not via the
+BIOS commands.  In particular, Data Carrier Detect is normally used to
+indicate that the modem is receiving a signal from a distant modem over the
+telephone connection, and if this signal is forced to be continuously true,
+some terminal emulators may refuse to dial the modem, assuming that the
+connection is already established.  NISTIMED does not use the BIOS and is not
+limited in this way.
+
+3.  The error message, "No response from modem." means that the modem did not
+respond to the dialing sequence as expected.  The message is followed by a
+number indicating how far into the sequence the error was sensed.  
+
+      Number 1 signifies no response to the initial command to reset the modem
+(ATZ).  If this message is received, be sure that the hardware is okay and
+that the modem is connected to the COM port specified in the configuration
+file.  
+
+      Numbers 2 through 4 indicate no response to various parts of the set-up
+sequence.  If this occurs, be sure that the echo/blind parameter on the second
+line of the configuration file is set appropriately and edit the configuration
+file (or rerun program MAKCFG) if necessary.  
+
+      A response of 5 means that the modem did not respond to the dial
+command.  This may be a telephone line problem since modem configuration
+problems are likely to have resulted in a failure at an earlier stage in the
+process.  It may also happen when a high-speed modem does not drop-back
+properly to 1200 bits/s.  These problems can usually be diagnosed by listening
+to the progress of the call on the built-in loudspeaker, if possible.  Be sure
+that the telephone number is correct and that any long-distance codes have
+been entered correctly. If a pause for a second dial-tone has been inserted,
+be sure that it is long enough, and add extra pause commands (,) if necessary. 
+
+      If the modem does not transmit "CONNECT" status but the sounds from the
+loudspeaker indicate that NIST has answered, then either the telephone line is
+noisy or the modem is not configured properly.  If you are using a multi-speed
+or combined DATA/FAX modem, then additional commands may be required as part
+of the dialing sequence to force the modem to 1200 bits/s data mode as
+described above.  Also be sure that no other program (such as an automatic
+FAX-listener) is connected to the serial line.  These programs are often
+started as part of the boot-strap process and then operate in background
+"terminate and stay resident" mode.
+
+4.  If the connection is established but the time is not set correctly, verify
+that the lines printed on the screen show the correct date and time.  If 1200-
+bits/s service is selected, the first number on each line is the Modified
+Julian Day (MJD) Number, which advances by 1 every day and is about 47000 in
+1988.  It is not used by the program.  The next numbers are year, month, day,
+hour, minute and second in order, where the hour is in Universal Time (UTC),
+followed by the Daylight Savings flag, which is an integer from 0 to 99.  The
+remainder of the line is not used by the program. If the lines are partially
+garbled then either the telephone line or the modem should be suspected.  If
+the lines are totally garbled, it is likely that the modem cannot communicate
+at the selected speed or does not conform to the corresponding standard.  It
+is also possible that there is a problem with the receive portion of the COM
+port, although this is less likely since the dialing commands use the same
+hardware.
+
+5.  If only the CMOS clock is not set correctly, verify that it conforms to
+the IBM standard and that the configuration file is set correctly.
+
+6.  If you select output pulses on the line-printer port (LPT1), be sure that
+the line printer is not connected and that only pins 1 and 25 on the printer
+interface connector are connected to the external device that uses the pulses
+(the pulse appears on pin 1, and pin 25 is ground).  If the line-printer is
+left connected and on-line, then each output pulse will send a random
+character to the printer.  The printer will respond to these transmissions in
+unpredictable ways, and subsequent print operations may not work properly as a
+result.  It may be necessary to re-boot the system in this case.
+
+      Some line printer interfaces do not produce the strobe pulse on pin 1 as
+discussed above.  This hardware will usually produce a pulse on pin 2 with
+respect to ground (pin 25).
+
+
+                               Error Handling
+
+     The program deals with only certain types of errors:  Syntax errors in
+the configuration file are likely to be detected, although the program does
+not place any limits on the telephone number, and an error in specifying it is
+unlikely to be sensed until the modem responds erratically.  Hardware problems
+or inconsistencies between the hardware and the configuration file will also
+be sensed since they will most likely result in no response from the modem or
+in a protocol error.
+
+     The most likely source of error in a nominally healthy and properly
+configured system is a transmission error.  We can distinguish several
+different types of problem depending on where the error occurs.
+
+     1.  The line terminating character (* or #) is garbled or lost.  The
+program will not detect the end of the line and will concatenate the line with
+the following one.  If output pulses are enabled, no pulse will be sent.  If
+the line in error is the line that is used either for setting the clock or
+checking it, then an error of 1 second will occur either in setting the clock
+or in comparing it.  If this is not either of those lines then the program
+will simply continue with no error (the other lines are displayed but are not
+used in any other way).  Since the length of the line is known, this error
+could be detected in principle, but the current version of the program does
+not do so.
+
+     2.  Another character on the line is converted to the terminator (* or
+#).  The program will detect a premature end-of-line and synchronization with
+the NIST will likely be affected.  If output pulses are enabled, a pulse will
+be sent at the wrong time.  The error introduced in setting the clock depends
+on which line this occurs in just as in 1 above.  Note that this error is
+rather unlikely since there are 128 characters that an error might produce,
+but only 2 of them are legal terminators.  This error could also be detected
+in principle by a line-length check as above, but the current version of the
+program does not do so.
+
+      3.  A digit of the time is transformed into another character that is
+not a digit.  This could be detected in principle by carefully checking each
+character on the line, but the current version of the program does not do so.
+If the line in error is used neither to set the time nor to check it, then the
+error will have no effect.  The computer clock is not set until two
+consecutive lines whose times differ by exactly one second are received, so
+that two identical transmission errors must occur at the same place in two
+consecutive lines for the clocks to be set incorrectly.  This is unlikely, but
+not impossible.  If this is the line that is used to check the clock then the
+discrepancy between the local time and the NIST time is likely to be large,
+since the error is unlikely to be confined to the least significant digit of
+the seconds.  If output pulses are enabled, this type of error has no effect
+on them since they are governed only by the receipt of the terminating
+character.
+
+      4.  A digit of the time is transformed into another legal digit.  This
+error cannot be detected by examining the line.  The probability is rather
+small, however, since there are only 10 legal digits out of 128 possibilities. 
+As with 3 above, if this is the line that is used to check the time, the
+discrepancy between the local time and the NIST time is likely to be large
+since the transmission error is unlikely to be confined to the least
+significant digit of the seconds.  As in 3 above, there is no degradation of
+the output pulse timing.
+
+     Errors 3 and 4 could also be dealt with by assuming some previous
+knowledge of the time or date and rejecting values that deviated from this
+assumed date and time by too great an amount.  Illegal month and day
+combinations could also be detected in this way.
+
+      The probability that these errors will result in setting the time
+incorrectly has been minimized by insisting that the times of two consecutive
+transmissions differ by exactly one second.  A general version of such a
+scheme is quite complex since it must cope with all of the peculiarities of
+the calendar, and only a simplified version has been implemented.  The seconds
+value from the first line of the pair is decoded and examined.  If it is
+greater than 57, then the comparison is postponed, since the following second
+may be the first second of a new minute. (Second number 58 is the last second
+of the current minute if a negative leap-second is imminent, second number 59
+is usually the last second of the current minute and second number 60 will be
+the last second if a positive leap-second is imminent.)  If the current second
+is less than 57, the seconds digits are converted to blanks and the remainder
+of the date and time are stored in a buffer as received.  When the next line
+is received, the seconds value is extracted and tested for equality with the
+previous value +1.  If this comparison succeeds, the remaining digits of the
+date and time (with the seconds field converted to blanks in both cases) are
+compared character by character (all characters must be the same). If either
+comparison fails a transmission error is assumed, and the process is begun
+again with the next two lines since the program has no way of knowing which of
+the two lines is in error.  This process continues until two consecutive lines
+are decoded and are found to be consecutive or until the NIST hardware hangs
+up the telephone.Name: MAKCFG
+
+Usage: MAKCFG
+
+    This program constructs a file named NISTIME.CFG based on the answers to a
+series of questions.  The program may be run from any directory of any disk,
+but is most conveniently run from the same directory in which program NISTIME
+is located.
+
+     The number of each question refers to the line of the output file that is
+being assembled.  Thus questions 1a, 1b, ... are used to assemble the various
+parameters for the first line.  The contents of each line are described in the
+description for the NISTIME program.
+
+     All of the acceptable responses for each question are listed as part of
+question.  Alphabetic answers may be given in upper or lower case.  All
+answers must be terminated with a carriage return (or enter), and this fact is
+denoted by the symbol <return> in the description for each response.  If you
+respond to any question with ? <return>, additional information will be
+printed out and the question will be repeated.  If your response is not one of
+the expected responses, the message, "I don't understand ..." is printed and
+the question is repeated.  
+
+     Your response is not passed to the program until the <return> key is
+pressed, so that errors may be erased using the delete key as usual and the
+corrected response may then be entered.  If the expected response is a single
+letter or digit, then all characters after the first one on the line are
+ignored (and an error will occur if the first character is not one of the
+expected responses even if a subsequent character is okay).  Thus if when
+either
+
+          y <return>
+or
+          n <return>
+
+is expected, you enter either
+
+          y <return>
+or
+          yes, we have no bananas <return>,
+
+the two responses will be treated identically since only the first character
+is parsed and the remainder of the line is discarded. (Note that the "no" in
+the middle of the second response is ignored since only the first character is
+examined.)
+
+     This program checks to see if a configuration file already exists in your
+directory.  If it finds the file, it will print a message and give you the
+choice of renaming the old file, over-writing the old file or stopping to
+think about it. 
+
+     If you choose to rename the file, the existing file will be renamed
+CONFIG.OLD immediately, and a new file named NISTIME.CFG will be created.  The
+renaming process will fail if a file named CONFIG.OLD already existed in the
+current directory, and the program will give up if that happens.  You must
+then erase one of the configuration files or copy them to another directory or
+sub-directory so that the program won't find them.  If the renaming operation
+succeeds, a new file named NISTIME.CFG is then created.
+
+     If you choose to over-write the existing configuration file or if the
+configuration file did not previously exist, a new file named NISTIME.CFG is
+created in the current directory (with zero length).
+
+      The program then asks which version of the program you are planning to
+use.  If you select the BIOS version of the program, then only COM1 or COM2
+can be used for communication; COM3 and COM4 can also be used if you select
+the direct-access version, and question 2a, which requests this information is
+modified accordingly.  If you select the direct access version and if your
+response to the port specification is 'h' then an additional question asking
+for the hardware address of the port is also asked.
+
+      It is also possible to generate configuration files for the other
+versions of the program using program MAKCFG.  A question at the start asks
+you which version of NISTIME you are using.  The differences among the various
+configuration files are discussed in Appendix A.
+
+     The various configuration parameters are not written to the file until
+all of the questions have been answered, and an empty file named NISTIME.CFG
+will be left in your directory if the program does not run to completion. 
+This might happen, for example, if you responded to any question with a
+control-c (pressing control key and c key together), since such a response
+will cause the program to stop immediately.  
+
+      Program MAKCFG allows you to specify your time zone by its letter.  To
+use this capability, you should respond with a * when you are asked for your
+time zone.  The program will then ask you to specify your time zone by letter. 
+You may respond in either upper or lower case.  Your answer is converted to a
+numerical offset according to the following table and the numerical offset is
+then stored in the file.  Note that you cannot enter these letters in the
+configuration file directly, since NISTIME does not recognize them (except for
+Z).  
+
+      Response         Difference (hours)      Response   Difference(hours)
+                       Local - Universal                  Local - Universal
+         A                   +1                   N                   -1
+         B                   +2                   O                   -2    
+         C                   +3                   P                   -3
+         D                   +4                   Q                   -4
+         E                   +5                   R                   -5
+         F                   +6                   S                   -6
+         G                   +7                   T                   -7
+         H                   +8                   U                   -8
+         I                   +9                   V                   -9
+         K                   +10                  W                   -10
+         L                   +11                  X                   -11
+         M                   +12                  Y                   -12
+
+         Z                   0
+
+     Note that the letter J is not assigned and that the zone centered on the
+prime meridian is assigned the letter Z.  The zone centered on the
+international date line has two assignments (M and Y), which will yield the
+same time on different days; most of the inhabited areas in that zone are on
+the Western side of the date line and will therefore use M.
+                            Notes about Revisions
+
+     The modifications to the software are described below:
+
+Original release      26 February 1988
+
+First Modification    31 May 1988
+
+     This modification corrected an error in the conversion to local time. 
+The error occurred if daylight savings time was in effect, if the conversion
+to daylight savings time was specified in the configuration file and if the
+program was run between 12:00:00 midnight and 12:59:59 am local daylight
+savings time.  The conversion to local daylight savings time should advance
+the date in this case, since the corresponding standard times would be
+11:00:00 pm and 11:59:59 pm on the previous day, but the program did not do
+this.  This error does not occur at other times during the day or if daylight
+savings time is not in effect or is not enabled in the configuration file
+NISTIME.CFG.  The transition days at the beginning and end of daylight savings
+time were also handled correctly.
+     The problem results from the interaction between the conversion to local
+standard time and the additional conversion for daylight savings time on the
+transition days at the beginning and end of the daylight savings time period. 
+Since the transition occurs at 02:00:00 am local time, the conversion for
+daylight savings time on a transition day must be delayed until after the
+local time and date have been computed.  On any other day or after 11:00:00 pm
+on a transition day, however, the conversion to daylight savings time may
+advance the date, and must therefore be performed before the local date can be
+known.
+     We have modified the software so that conversions on transition days and
+on other days are handled separately.
+
+Second modification   15 July 1988
+
+     The second modification provides for several enhancements:
+
+1.  Two versions of the program are now supported: NISTIMEB and NISTIMED.  The
+_B version uses the BIOS for input/output and the _D version accesses the
+hardware ports directly.  The two versions can be produced from the same
+source files by editing the file NISTIME.H (see comments in that module) and
+then recompiling the affected routines.  The table below shows all of the
+modules comprised in both versions of NISTIME.  Modules that are affected by a
+change in NISTIME.H are indicated by (nistime.h) on the same line.  Comments
+in each module describe the dependence.  In some cases (such as dial.c and
+hangup.c), the difference is primarily in the values for constants that set
+the time-out delays, since program NISTIMED is considerably faster than
+NISTIMEB.
+
+2.  The program does not set the time of the computer clock unless two
+consecutive lines have times that differ by exactly one second.  This is
+intended to prevent the time from being set erroneously as a result of a
+transmission error.
+
+3.  The telephone line status report in module dial.c has been modified.  The
+previous version assumed that a modem response to a dial command was the final
+status of the call, and that a response containing an 'R' was produced either
+by NO ANSWER or NO CARRIER and was therefore reported an incomplete call. 
+Some modems were found to send an intermediate status of RINGING.  This
+version of the program differentiates between R as the first letter of the
+word and ER at the end.  In the first case, an intermediate response is
+assumed and the program waits for a second message.  In the second case an
+incomplete call is assumed and the program exits.
+
+Third modification -- 30 September 1988
+
+The third modification consisted of the following changes:
+
+1.  This modification adds code to estimate the rate offset of the computer
+clock with respect to NIST.  This is done by subtracting the difference
+between the computer clock and the NIST with the corresponding values read
+from the last line of the archive file.  The second differences are normalized
+by the time that has elapsed between the two estimates.  The result is
+converted to seconds per day and is printed on the terminal following the time
+difference. If the machine has a both a RAM and a CMOS clocks, then the rates
+of both clocks will be estimated.
+
+2.  Additional code has been added to enable the program to run on different
+computers.  The additional code is activated by editing file nistime.h (see
+the comments in that file for more details). The capabilities of the different
+versions are described in Appendix A.
+
+Fourth Modification -- 1 November 1988
+
+     All of the file names that reference nbs ... were changed to nis ... to
+reflect the change in the name of the National Bureau of Standards to the
+National Institute of Standards and Technology.  Thus file nbstime.h is now
+called nistime.h, etc.  The operation of the program is unaltered.
+
+Fifth Modification -- 17 June 1989
+
+1.  This modification adds code to estimate the clock speed of the computer. 
+This is done by counting the number of times a simple loop can be executed in
+approximately 0.25 seconds.  This value is normalized by 6950, the number of
+times the same loop was executed on a 6 MHz machine.  This relative speed is
+used to scale the size of all of the internal timing loops, thereby making
+these loops independent of processor speed.  This change will enable the
+program to run on newer 286 and 386 type machines.
+
+2.  The accuracy of the time and rate comparisons has been improved by
+interpolating between ticks of the computer clock.  This interpolation is
+accomplished by counting the number of times a simple loop can be executed
+starting from the receipt of the On-Time-Marker from NIST and ending at the
+next tick of the local clock.   This number is normalized using the relative
+clock speed of the computer which is determined as described in the preceding
+paragraph.
+
+Sixth Modification -- 20 July 1990
+
+1.  This modification adds code to use the transmissions at 300 bits/s to set
+or check the local clock by taking advantage of the modified transmission
+format at that speed.  
+
+2.  The routines to estimate the speed of the computer and to interpolate
+between ticks have been improved to permit the program to run with the faster
+-286 and -386 machines.  
+
+Seventh Modification -- 7 January 1992
+
+      This version changes the time-out algorithm so that the program will
+operate with the faster -386 and -486 systems.  Subroutine CPUSPD has been
+removed, and the time-outs are now measured using direct calls to the system
+clock rather than by calibrated loops as in the previous versions.  This
+change was made because subroutine CPUSPD did not estimate the relative speed
+of some faster machines, especially those having extended or expanded memory
+drivers.  This change is only important for the PC version; the other versions
+are not affected.
+
+Eight Modification  -- 23 November 1992
+
+      This version adds support in subroutine dial.c to detect a BUSY status
+response from the modem.  Previous versions did not check for this response
+and would exit on a time-out in this situation.  The actual detection of the
+BUSY signal is done by the modem, and not all modems will detect this signal
+reliably.  If the BUSY signal is not detected, the program will still exit on
+a time-out as before.
+
+      In addition, this version supports re-dialing the ACTS system if the
+connection does not complete for any reason.  Either manual or automatic re-
+dialing can be selected; either capability must be enabled in the
+configuration file, and re-dialing is disabled by default.  This capability is
+discussed in more detail in the section on the configuration file.
+
+      This modification also made minor changes to the interpolation algorithm
+for the SUN version of the program.
+
+      It also corrected a problem in the PC version in the conversion to
+daylight savings time.  The conversion was not correct if the program was run
+near 0200 on the transition day in the Fall (that is, near 0200 local time on
+the last Sunday in October).
+
+Ninth Modification -- 20 January 1993
+
+      This modification allows commands to the modem to be incorporated into
+the dialing string in addition to the command to dial the telephone number. 
+These commands can now be included on the first line of the configuration
+file, and the acceptable format is described above in the configuration file
+section.  Previous versions of the configuration file will still work.
+
+Tenth Modification -- 13 September 1994
+
+      This modification made minor changes to the dialing and hang-up logic to
+accommodate multi-speed modems connected to 486 and faster machines.  Previous
+versions of the program would not dial or hang-up properly on some fast
+systems.     The following table lists all of the modules, their functions and their
+last revision.  File nistime.h is included in all of the modules, and the
+parameters defined in it govern the compilation.
+
+ 
+Module      Depends     Last         Function of
+Name          on      modified         Module
+
+nistime.h               #8       Defines parameters that control compilation
+rdline.c  (nistime.h)   #10      Main program
+wrtbuf.c  (nistime.h)   #4       Write string of characters to port.
+rdbuf.c   (nistime.h)   #7       Read string of characters from port.
+inilin.c  (nistime.h)   #7       Determine hardware addresses and initialize.
+dial.c    (nistime.h)   #9       Dial telephone number and report status.
+wait.c    (nistime.h)   #4       Delay for 1 second.
+hangup.c  (nistime.h)   #10      Hang-up telephone line and reset modem.
+parset.c  (nistime.h)   #8       Parse received line and set clocks.
+cnvbcd.c  (nistime.h)   #4       Convert binary to packed BCD.
+setcfg.c  (nistime.h)   #9       Read configuration file and set parameters.
+sndptr.c  (nistime.h)   #4       Send pulse to line printer port.
+diftim.c  (nistime.h)   #8       Compute and display time difference.
+unpbcd.c  (nistime.h)   #4       Convert packed BCD to binary.
+arcdif.c  (nistime.h)   #8       Compute time difference and write to file.
+cmplst.c  (nistime.h)   #6       Compare times of consecutive lines.
+getlst.c  (nistime.h)   #4       Gets last line of archive file and parses it.
+makefile                #6       Input for make command on SUN system.
+nistime.prj             #6       Input for make command on IBM PC system.
+cpuspd.c  (nistime.h)   #6       Computes Relative CPU speed.
+interp.c  (nistime.h)   #8       Interpolates between local clock ticks.
+cvt2jd.c                #6       Computes MJD from year, month and day                                 Appendix A
+
+      1.  The SUN version.
+
+    This version of the software was developed on a SUN workstation, but
+should work with only minor modifications in other UNIX environments.  Most
+UNIX environments keep time internally in units of seconds (and possibly
+fractions of a second) since 1 January 1970 Universal (Greenwich) Time.  The
+conversion to local date and time is performed by the operating system as
+needed.  
+
+     The sun version of NISTIME converts the time received from NIST to
+seconds since 1 January 1970 by subtracting 40587 (the MJD of 1 January 1970)
+from the received MJD, multiplying the difference by the number of seconds in
+a day (86400) and then adding the number of seconds equal to the received
+time.  This result is used both for time comparisons and to set the computer
+clock, if necessary.  
+
+      Since the MJD is not transmitted at 300 bits/s, the sun version computes
+the MJD from the received year, month and day using the function cvt2jd.  The
+value computed is used as described above.  
+
+     In addition to the limitations discussed above (see the sections on
+Timing Accuracy and Error Handling), there are several other important
+considerations that are unique to this version.  Although any user may compare
+the computer time with NIST, setting the time on the computer is a privileged
+operation that requires super-user status.  The program will not complain
+about a request to set the time by a user who is not the super-user, but the
+operation will be rejected by the operating system.  In addition, changing the
+clock in a multi-user, multi-processing environment may adversely affect the
+operation of user tasks scheduled via "cron" and background real-time
+processes ("daemons").  In extreme cases, the causality that is necessary for
+the proper operation of commands such as "make" might be violated.  Finally,
+the program may not echo the on-time marker promptly if the system is heavily
+loaded or if the task is run through a window.
+
+     The sun version of the software uses the same source code files as the
+IBM PC version.  The header file nistime.h must be edited to define the
+constant SUN and to remove the definitions of the constants IBMPC and BIOS. 
+In addition, the time (in microseconds) between ticks should be entered in the
+header file. This constant is used to interpolate between hardware ticks; if
+it is set to 0 then the interpolation process is effectively disabled. 
+Typical values are 10000 (for a DEC ULTRIX/VAX), 20000 (for a SUN) or 3906 
+(for DEC ULTRIX/RISC) depending on the hardware clock rate.  See the comments
+in file nistime.h for more details on how to do this.  The sun version may
+then be compiled using the "make" command and the makefile that is supplied. 
+The commands
+
+make makcfg
+
+and
+
+make nistime
+
+produce the executable files makcfg and nistime, respectively.
+
+                         The SUN Configuration File
+
+     The configuration file for the sun system differs somewhat from the
+version that is used by the IBMPC version.  The SUN version may be produced
+with any text editor.  Program MAKCFG may also be used.
+
+Line 1.  This line is used to specify the telephone number.  It is identical
+to the IBM PC version.  See the discussion above for more details.
+
+Line 2.  The first two characters specify the communication port.  There are
+three different possibilities:
+
+   a.  <a><b> specifies port /dev/tty<a><b>
+
+   b.  <a> -  specifies port /dev/tty<a>
+  
+   c.   -     specifies that the port will be defined on line 3.
+
+where <a> and <b> are two characters chosen from a - z or A - Z or 0 - 9. Note
+that case is significant: AB specifies /dev/ttyAB whereas b- specifies
+/dev/ttyb.  Note that if the first character is -, the second character is not
+used and the characters specified below follow immediately starting in column
+2.
+     The next characters on the line are:
+
+     E/e/B/b           Echo/Blind dialing.  See description for IBM PC
+     H/h/L/l           1200/300 speed.      See description for IBM PC
+     S/s/D/d           Set/Check clock.     See description for IBM PC
+     a/A/n/N           Archive and rate     See description for IBM PC
+     /r/R/m/M          Re-dial on Busy      See description for IBM PC
+                       or No Answer
+
+These characters must appear in the order shown with no embedded spaces.  All
+of these parameters have the same effect as in the IBMPC version.  Note that
+it is not possible to send a pulse to the line-printer port in the sun
+version.
+
+Line 3.  If the first character of line 2 was a -, then the path of the
+communications port is specified here as a string of characters.  The string
+will be passed directly to the operating system and is not checked or parsed. 
+Thus instead of specifying <a> - at the start of line 2, you could equally
+well put a - at the start of line 2 (followed by the other parameters as
+appropriate) and put /dev/ttya on line 3.  If the port is fully specified on
+line 2 then this line is not needed.
+
+      2.  The PDP - 11 (RSX11M) Version
+
+     This version is written in FORTRAN 77 under RSX11M version 4.2, but
+should also run under earlier versions of the operating system.  Although the
+program is written in standard FORTRAN, it depends heavily on the RSX11M
+environment for various system services and will therefore not work in other
+operating environments without modification.
+
+    This version is intended for setting or checking the computer clock and
+therefore only operates at 1200 bits/sec.  It uses the Set Multiple
+Characteristics function of subroutine QIO to configure the communications
+port for a speed of 1200 bits/sec.  If the request to set the speed is
+rejected (which will happen if the speed of the desired port is fixed by the
+hardware), then the program will tell you this and give you the chance to
+proceed anyway.  If you answer yes, the hardwired speed of the port will be
+used.  If you answer no, the program will stop immediately.
+
+     The time in RSX11M is stored, read and set as a series of integers that
+are the same as the NIST transmission format: year - 1900, integer month (1 -
+12), day of month, hour, minute and second.  The time is advanced in ticks;
+the current tick and the number of ticks/second define the current fraction of
+a second with a resolution of 1 tick.  The operating system knows about the
+vagaries of the calendar (number of days in a month and which years are leap
+years), but does not support the concepts of time zones or daylight savings
+time.
+
+     This version of NISTIME must be built as a privileged program since it
+sets the characteristics of the communications port.  It can be used by a non-
+privileged user if a privileged user INStalls it, but this will also allow any
+user to change the clock.  The following commands can be used to produce the
+task file NISTIME.TSK starting from the FORTRAN text:
+
+F77 NISTIME,NISTIME=NISTIME
+
+TKB NISTIME/-CP/FP/PR:0=NISTIME
+
+Note that the task is built as privileged but does not need to be mapped to
+the executive, and that it is built non-checkpointable to insure a rapid and
+consistent response time.  The default file extensions are used for all of the
+files.  Thus the input source file is named NISTIME.FTN, and the output of TKB
+will be called NISTIME.TSK.  The intermediate file NISTIME.OBJ may be deleted
+after TKB finishes.  To avoid confusion with possible future versions, the
+source file is named NISTIME.RSX.FTN.  This file should be renamed NISTIME.FTN
+before being copied to the host system.
+
+     Since RSX11M is a multi-tasking system, the time should be adjusted with
+care.  The activation times of tasks in the clock queue will be affected by a
+time adjustment.  Time intervals, which are measured in clock ticks, are not
+changed.
+
+                       The PDP - 11 Configuration File
+
+     The PDP - 11 configuration file is defined below. The file is named
+NISTIME.CFG as in the other implementations.  It can be prepared using any
+text editor and should be stored in the UIC from which the program will be
+run.  Program makcfg can also be used, but is unlikely to be of much help if
+the host does not have a C compiler (since makcfg is written in C). 
+
+Line 1: This line is used to specify the telephone number.  It is identical to
+the other implementations.
+
+Line 2: The first two characters specify the port to be used for communicating
+with NIST.  If the first two characters are the digits <j> and <k>, then port
+TT<j><k>: will be used.  Note that port numbers in RSX11M are in octal, so
+that only the digits 0 - 7 inclusive are legal, and that both digits must
+always be present.  Thus TT1: is specified by 01 and TT17: by 17.
+  
+  The remaining characters on this line can be any of the following characters
+in any order.  If a given character is not present, the corresponding
+operation is not performed.   
+
+Character         What Happens if Present
+
+L or l            (L)ist text lines as received from NIST
+
+C or c            (C)ompare computer clock with NIST and print difference
+
+A or a            (A)rchive difference to file NISTIME.DIF
+
+S or s            (S)et computer clock to NIST time
+
+R or r            (R)ate estimate -- compare current offset with previous
+                       value as read from NISTIME.DIF
+
+D or d            (D)ebug mode -- print various intermediate results
+
+Any combination of functions may be specified.  A more detailed explanation of
+the operation of each function may be found in the description of the IBM PC
+version.
+
+    This version of the program uses the read-with-timeout capability of the
+operating system so that you do not have to specify Echo/Blind modem operation
+as with the other versions.  If the modem does not respond to a dialing
+request within 100 seconds, the program will exit with error 801.  This is
+almost certainly an indication of a hardware problem.  Other error exits are
+usually caused by the executive rejecting a program request -- also a sign of
+trouble.
+  
+Line 3:  This line is used to request a conversion to local time as in the IBM
+PC implementation.  If the first character is a letter, it specifies the time
+zone of the user as follows:
+
+First Character        Time Zone               Offset to be applied
+
+      P or p                 U. S. Pacific           -8 hours
+
+      M or m                 U. S. Mountain          -7 hours
+
+      C or c                 U. S. Central           -6 hours
+
+      E or e                 U. S. Eastern           -5 hours
+
+      Z or z                 Greenwich                0 hours
+
+The offset between local and Universal (Greenwich) time may also be specified
+numerically as in the IBMPC version.  The value should be entered in hours
+with an optional leading sign.  Locations West of Greenwich are negative,
+while those East are positive.  The value should not be less than -12 nor more
+than +12, but this is not checked.  The letter D (or d) may be appended to the
+time zone specification (in any format) to signify that the correction for
+Daylight Savings Time should also be applied if needed.  The following are all
+legal specifications (all begin in column 1):
+
+-9D   +05   +8   Pd   Z   zD
+
+      3.  The VAX/VMS Version
+
+     This version is written in VAX FORTRAN under VMS version 5.1, but should
+also run under earlier versions of the operating system.  Although the program
+is written in standard FORTRAN, it depends heavily on the VMS environment for
+various system services and will therefore not work in other operating
+environments without modification.
+
+    This version is similar to the PDP - 11 version described above.  In
+general the differences between the two versions are only in the syntax of the
+requests for various system services.  As will the PDP - 11 version, the Set
+Mode function of subroutine QIO is used to configure the communications port.
+If the request to set the speed is rejected, the program will halt with the
+diagnostic, "error in set characteristics." 
+
+     The time in VMS is stored, read and set as a 64-bit binary quantity
+giving the number of 100 ns ticks since the arbitrary origin in 1857.  The
+conversion to and from this format is performed by system services.  Although
+the resolution of the time is 100 ns, the time advances in 10 ms ticks and it
+is generally not possible to read or set the clock with a resolution finer
+than 1 tick.  The operating system knows about the vagaries of the calendar
+(number of days in a month and which years are leap years), but does not
+support the concepts of time zones or daylight savings time.  This program
+will convert to local time including a correction for daylight saving time, if
+necessary.
+
+     This version of NISTIME requires sufficient permission to access the RS-
+232 port used to communicate with the modem.  If the computer clock is to be
+set as well, then additional privilege is necessary.  It requires no special
+switches for compilation or linking:
+
+$ FORTRAN NISTIME
+
+$ LINK NISTIME
+
+The default file extensions are used for all of the files.  Thus the input
+source file is named NISTIME.FOR, and the output of LINK will be called
+NISTIME.EXE.  The intermediate file NISTIME.OBJ may be deleted after LINK
+finishes.  To avoid confusion with other versions, the source files will be
+named NISTIME_VAX.FOR and IOCHAN2_VAX.INC.  These should be renamed
+NISTIME.FOR and IOCHAN2.INC after being copied to the host system.
+
+     Since VAX/VMS is a multi-tasking system, the time should be adjusted with
+care.  The activation times of tasks in the clock queue will not be affected
+by a time adjustment.  Time intervals, which are measured in clock ticks, are
+changed by the amount of the adjustment (Note that this is opposite in the
+PDP-11 case).
+
+                       The VAX/VMS Configuration File
+
+     The VAX/VMS configuration file is defined below. The file is named
+NISTIME.CFG as in the other implementations.  It can be prepared using any
+text editor and should be stored in the directory from which the program will
+be run.  
+
+Line 1: This line is used to specify the telephone number.  It is identical to
+the other implementations.
+
+Line 2: The first two characters specify the port to be used for communicating
+with NIST.  If the first two characters are in the format <letter><number>,
+then port TT<letter><number>: will be used.  For example, A2 specifies that
+communications port TTA2: will be used to connect to the modem.  If the first
+two characters are "--"  then the full name of the port is specified on the
+last line of the file.  This will be necessary if the port is named TXA2:
+(rather than TTA2:), for example.  
+  
+  The remaining characters on this line can be any of the following characters
+in any order.  If a given character is not present, the corresponding
+operation is not performed.   
+
+Character         What Happens if Present
+
+L or l                 (L)ist text lines as received from NIST
+
+C or c                 (C)ompare computer clock with NIST and print
+                       difference
+
+A or a                 (A)rchive difference to file NISTIME.DIF
+
+S or s                 (S)et computer clock to NIST time
+
+R or r                 (R)ate estimate -- compare current offset with
+                       previous value as read from NISTIME.DIF
+
+D or d                 (D)ebug mode -- print various intermediate results
+
+Any combination of functions may be specified.  A more detailed explanation of
+the operation of each function may be found in the description of the IBM PC
+version.
+
+    This version of the program uses the read-with-timeout capability of the
+operating system so that you do not have to specify Echo/Blind modem operation
+as with the other versions.  If the modem does not respond to a dialing
+request within 100 seconds, the program will exit with error 801.  This is
+almost certainly an indication of a hardware problem.  Other error exits are
+usually caused by the executive rejecting a program request -- also a sign of
+trouble.
+  
+Line 3:  This line is used to request a conversion to local time as in the IBM
+PC implementation.  If the first character is a letter, it specifies the time
+zone of the user as follows:
+
+First Character        Time Zone               Offset to be applied
+
+      P or p                 U. S. Pacific           -8 hours
+
+      M or m                 U. S. Mountain          -7 hours
+
+      C or c                 U. S. Central           -6 hours
+
+      E or e                 U. S. Eastern           -5 hours
+
+      Z or z                 Greenwich                0 hours
+
+The offset between local and Universal (Greenwich) time may also be specified
+numerically as in the IBMPC version.  The value should be entered in hours
+with an optional leading sign.  Locations West of Greenwich are negative,
+while those East are positive.  The value should not be less than -12 nor more
+than +12, but this is not checked.  The letter D (or d) may be appended to the
+time zone specification (in any format) to signify that the correction for
+Daylight Savings Time should also be applied if needed.  The following are all
+legal specifications (all begin in column 1):
+
+-9D   +05   +8   Pd   Z   zD
+
+Line 4:  If the first two characters of line 2 were "--", then this line
+contains the full name of the port to be used to connect to the modem.  The
+name is not checked by the program and must be acceptable to the operating
+system.  If the port was specified in line 2, this line is not necessary.
+ 
